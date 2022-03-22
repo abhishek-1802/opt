@@ -1,0 +1,74 @@
+clc
+clear all
+m = 4;
+A = [2,4 ;3,5 ; 0,1; 1,0];
+B = [8 ; 15 ; 0 ;0];
+X = 0:1:max(abs(B))
+
+for i=1:m
+    y(i,:)=(B(i,1)-(A(i,1)*X))/A(i,2);
+end
+y
+for i=1:m
+    maxima(i)=max(y(i,:));
+end
+
+maxima
+
+xrange=max(abs(B))
+yrange=max(maxima)
+% plot(X,y(1,:),X,y(2,:))
+% axis([0 xrange 0 yrange])
+% grid on
+k=1;
+
+for i=1:(size(A,1)-1)
+    for j=i+1:size(A,1)
+        p=[A(i,:);A(j,:)]
+        q=[B(i);B(j)]
+        if(det(p)~=0)
+        x=inv(p)*q
+        pts(k,:)=transpose(x)
+        k=k+1;
+        end
+    end
+end
+pts
+%feasible points
+pts=unique(pts,"rows")   %duplicate remove
+number=length(pts)
+asub=A([1:m-2],:)
+bsub=B([1:m-2],:)
+q=1
+feasible_pts=[]
+for i=1:number
+    if(pts(i,:)>=0)
+        pt1=transpose(pts(i,:))
+        if(asub*pt1-bsub<=0)
+            feasible_pts(q,:)=pt1'
+            q=q+1            
+        end
+    end
+end
+ if(isempty(feasible_pts))
+     fprintf("no feasible point\n");
+     return
+ else
+     feasible_pts
+ end
+ 
+%optimal solution
+obj_fun=[-3,-2]
+for i=1:length(feasible_pts)
+    z(i)=obj_fun*feasible_pts(i,:)'
+end
+optim_sol=max(z)
+index_opt=find(z==optim_sol)
+feasible_pts(index_opt,:)
+optim_sol=abs(optim_sol)  
+%graph plotting
+d=feasible_pts(index_opt,1)
+e=feasible_pts(index_opt,2)
+ plot(X,y(1,:),X,y(2,:),d,e,'o')
+   axis([0 xrange 0 yrange])
+  grid on;

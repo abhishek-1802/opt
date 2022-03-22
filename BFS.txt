@@ -1,0 +1,37 @@
+clear all
+clc
+n=4;
+m=2;
+A=[-1,1,1,0 ; 1,1,0,1];
+B=[1;2];
+C=[1,2,0,0];
+p = nchoosek(n,m)
+q = nchoosek([1:n],m)
+
+flag=0;
+feas=[];
+for i =1:p
+    index = q(i,:);
+    asub = [];
+    X=zeros(n,1);
+    for j=1:m
+        asub = [asub A(:,index(j))];
+    end  
+     if (det(asub)~=0)
+         Y = inv(asub)*B;
+     end
+X(index)=Y;
+      if X>=0
+          feas = [ feas , X];
+          flag = flag + 1;
+      end
+end
+feas
+if flag~=0
+    z = C*feas;
+    maxima = max(z)
+    r = find(z==maxima);
+    opt_sol = feas(:,r)
+else
+    fptintf("No feasible solution");
+end

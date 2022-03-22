@@ -1,0 +1,108 @@
+clc
+clear all
+%%%%%%%%%%%%% Converting to standard form and adding artificials %%%%%
+%%%%%%%%%%%%%
+% Inputs: Coefficient matrix A, Sign matrix for constraints, number of
+% constraints, rhs of constraints, cost
+A = [1 1;1 3;1 -1]
+m = 3
+nv = 2
+sign = [1 1 0]
+b = [2;3;1]
+c = [3 2]
+S = eye(m) % Initializing to identity adds slack variable to all
+ %constraints
+% Check sign of each constraints and add variables (slack, surplus,
+ %artificial)
+cnew = c
+nart = 0
+index_bv = []
+for i = 1:m
+ dummy = zeros(m,1)
+ if sign(i) < 0
+ S(i,i) = -S(i,i)      %surplus
+ nart = nart + 1          %adding ai var
+ dummy(i) = 1
+ S = [S dummy] % add a column when '>=' constarint
+ cnew(nv + i) = 0
+ cnew(nv + m + nart) = -1000000
+ else if sign(i) == 0
+ S(i,i) = 1
+ cnew(nv + i) = -1000000
+ else if sign(i) > 0
+ cnew(nv + i) = 0
+ end
+ end
+ end
+end
+Anew = [A S]
+n = length(Anew)
+nart = 0
+for i = 1:m
+ index_bv(i) = nv + i
+ if sign(i) < 0
+ nart = nart + 1
+ index_bv(i) = nv + m + nart
+ end
+end
+ cb = cnew(index_bv)
+%%%%%%%%%%%%%%Simplex Algorithim%%%%%%%%%%%%%%%%%%%%%%%%
+%first convert the problem to standard form and then input the
+ %following
+% values
+n=length(Anew)% Number of variables
+c= cnew;
+A= Anew;
+index = index_bv
+            % RHS vector b and number of constraints m is used from before.
+            %index is used from BFS calculation done before.
+for s=1:100 % number of iterations
+ B=[];
+for j=1:m
+ B=[ B A(:,index(j))]           % computing basis matrix
+end
+tolerance=10^-7
+if abs(det(B))<tolerance
+ disp('change basis matrix');
+end
+cb=c(index)                                         % cost of basic variables
+Xb=inv(B)*b                                             % basic solution
+if nnz(Xb)< m                                           % checking degeneracy
+ disp('degenerate bfs')
+ Xb
+ index
+ end
+z=cb*Xb                     %computing objective function value
+Y=inv(B)*A                  % computing column vectors of all variables
+NE=cb*Y-c                   % computing net evaluations
+                            %optimality check
+if NE>=0                    % for max problem, sign will be changed for min problem
+    disp('optimality declared');
+    Xb
+    index
+    z
+    break
+    
+else
+    % if optimality not declared
+    %choose entering variable
+    [a,EV]= min(NE)
+    %choose leaving variable
+    for j=1:m
+        if Y(j,EV)>0
+            ratio(j)=Xb(j)/Y(j,EV) % selecting only positive pivots
+        else
+            ratio(j)= 10^8
+        end
+    end
+    if min(ratio)==10^8 % this would happen if no positive pivots are
+    %there in column of entering variable
+        disp('Lpp is unbounded')
+        break;
+    else
+        [k,LV]=min(ratio)
+        index(LV)=EV% replacing leaving variable with entering
+        %variable
+    end
+end
+end
