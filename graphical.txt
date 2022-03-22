@@ -1,74 +1,84 @@
 clc
-clear all
-m = 4;
-A = [2,4 ;3,5 ; 0,1; 1,0];
-B = [8 ; 15 ; 0 ;0];
-X = 0:1:max(abs(B))
+clear
+%f=@(x) 100-2*x;
+A= [2,1;1,1;1,0;0,1];
+B= [100;80;0;0];
+%y(1,1)=B(1)-2*A(1,1);
+x1=0:max(B)
+y1=B(1)-(A(1,1)*x1)
+%x2=0:1:max(B)
+y2=B(2)-A(2,1)*x1
+y1=max(0,y1)
+y2=max(0,y2)
 
-for i=1:m
-    y(i,:)=(B(i,1)-(A(i,1)*X))/A(i,2);
-end
-y
-for i=1:m
-    maxima(i)=max(y(i,:));
-end
+plot(x1,y1,x1,y2)
+legend('2x+y=100', 'x+y=80')
+xlabel('x')
+ylabel('y')
 
-maxima
+%nd part(continue):
 
-xrange=max(abs(B))
-yrange=max(maxima)
-% plot(X,y(1,:),X,y(2,:))
-% axis([0 xrange 0 yrange])
-% grid on
-k=1;
+A1=A(1,:);
+A2=A(2,:);
+A3=[A1;A2];
+B1=B(1,:);
+B2=B(2,:);
+B3=[B1;B2];
+X=inv(A3)*B3;
 
-for i=1:(size(A,1)-1)
-    for j=i+1:size(A,1)
-        p=[A(i,:);A(j,:)]
-        q=[B(i);B(j)]
-        if(det(p)~=0)
-        x=inv(p)*q
-        pts(k,:)=transpose(x)
-        k=k+1;
-        end
-    end
+pt=[0;0];
+m=size(A,1);
+for i=1:m-1
+    A1=A(i,:);
+    B1=B(i,:);
+     for j=i+1:m
+         A2=A(j,:);
+         B2=B(j,:);
+         A3=[A1;A2];
+         B3=[B1;B2];
+         X=inv(A3)*B3
+          X=max(0,X)
+          pt=[pt X]
+     end
 end
-pts
-%feasible points
-pts=unique(pts,"rows")   %duplicate remove
-number=length(pts)
-asub=A([1:m-2],:)
-bsub=B([1:m-2],:)
-q=1
-feasible_pts=[]
-for i=1:number
-    if(pts(i,:)>=0)
-        pt1=transpose(pts(i,:))
-        if(asub*pt1-bsub<=0)
-            feasible_pts(q,:)=pt1'
-            q=q+1            
-        end
-    end
+x=pt'
+x=unique(x,'rows')
+
+% 3rd lab 
+X1=x(:,1);
+X2=x(:,2);
+
+const1= round(A(1,1)*X1+A(1,2)*X2-B(1));
+s1= find(const1>0);
+x(s1,:)=[];
+x
+
+X1=x(:,1);
+X2=x(:,2);
+const2= round(A(2,1)*X1+A(2,2)*X2-B(2));
+s2= find(const2>0);
+x(s2,:)=[];
+x
+
+X1=x(:,1);
+X2=x(:,2);
+const3= round(A(3,1)*X1+A(3,2)*X2-B(3));
+s3= find(const3<0)
+x(s3,:)=[];
+x
+
+X1=x(:,1);
+X2=x(:,2);
+const4= round(A(4,1)*X1+A(4,2)*X2-B(4));
+s4= find(const4<0)
+x(s4,:)=[];
+x
+
+% maximum among these points
+C=[2,5];
+optimal=x;
+for i=1:size(optimal,1)
+    f(i,1)=sum(optimal(i,:).*C)
 end
- if(isempty(feasible_pts))
-     fprintf("no feasible point\n");
-     return
- else
-     feasible_pts
- end
- 
-%optimal solution
-obj_fun=[-3,-2]
-for i=1:length(feasible_pts)
-    z(i)=obj_fun*feasible_pts(i,:)'
-end
-optim_sol=max(z)
-index_opt=find(z==optim_sol)
-feasible_pts(index_opt,:)
-optim_sol=abs(optim_sol)  
-%graph plotting
-d=feasible_pts(index_opt,1)
-e=feasible_pts(index_opt,2)
- plot(X,y(1,:),X,y(2,:),d,e,'o')
-   axis([0 xrange 0 yrange])
-  grid on;
+ pointValue=[optimal,f]
+ optimalValue=max(f)
